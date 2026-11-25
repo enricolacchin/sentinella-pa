@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https:; frame-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="Verifica passiva della sicurezza dei siti della Pubblica Amministrazione italiana, con report e bozza PEC per la divulgazione responsabile.">
+<title>Sentinella PA — verifica passiva della sicurezza dei siti PA</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 2 4 7v8c0 7.4 5.1 13.4 12 15 6.9-1.6 12-7.6 12-15V7z' fill='%230066cc'/%3E%3Cpath d='m10.5 16 4 4 7-8' stroke='%23fff' stroke-width='3' fill='none'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+<script src="app.js" defer></script>
+</head>
+<body>
+<a class="salta" href="#contenuto">Vai al contenuto</a>
+
+<header class="testata">
+  <div class="contenitore testata-riga">
+    <a class="marchio" href="./">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2 4 7v8c0 7.4 5.1 13.4 12 15 6.9-1.6 12-7.6 12-15V7z"/><path class="spunta" d="m10.5 16 4 4 7-8"/></svg>
+      <span>Sentinella PA</span>
+    </a>
+    <nav aria-label="Collegamenti">
+      <a href="#come-funziona">Come funziona</a>
+      <a href="https://github.com/enricolacchin/sentinella-pa" rel="noopener">Codice sorgente</a>
+    </nav>
+  </div>
+</header>
+
+<main id="contenuto">
+  <section class="eroe">
+    <div class="contenitore">
+      <h1>Quanto e' sicuro il sito del tuo ente?</h1>
+      <p class="sottotitolo">Una verifica <strong>esclusivamente passiva</strong>: Sentinella PA osserva solo cio' che vede un normale browser e un normale server di posta. Ottieni un report tecnico, un riepilogo per il sindaco e una bozza di PEC per segnalare i problemi con garbo.</p>
+
+      <form id="modulo" class="modulo" novalidate>
+        <label for="url">Indirizzo del sito</label>
+        <div class="modulo-riga">
+          <input id="url" name="url" type="text" inputmode="url" autocomplete="url" spellcheck="false"
+                 placeholder="www.comune.esempio.it" required maxlength="300" aria-describedby="nota-modulo">
+          <button id="avvia" type="submit">Analizza</button>
+        </div>
+        <p id="nota-modulo" class="nota">Nessuna scansione, nessun tentativo di accesso: solo la pagina principale, il certificato, i record DNS pubblici e <code>security.txt</code>.</p>
+      </form>
+
+      <p class="alternativa">Hai gia' un report generato con la riga di comando?
+        <label class="collegamento-file">Apri un file JSON<input id="file-json" type="file" accept="application/json,.json"></label>
+      </p>
+    </div>
+  </section>
+
+  <div class="contenitore">
+    <div id="messaggio" class="messaggio" role="alert" hidden></div>
+
+    <section id="attesa" class="attesa" hidden aria-live="polite">
+      <div class="rotella" aria-hidden="true"></div>
+      <div>
+        <p class="attesa-titolo">Analisi di <span id="attesa-host"></span> in corso…</p>
+        <p class="nota">Di solito servono 5–20 secondi. Puoi lasciare aperta la pagina: il risultato comparira' qui.</p>
+      </div>
+    </section>
+
+    <section id="risultato" hidden>
+      <div class="sintesi">
+        <div id="voto" class="voto" aria-hidden="true"></div>
+        <div class="sintesi-testo">
+          <h2 id="sintesi-host"></h2>
+          <p id="sintesi-punteggio" class="punteggio"></p>
+          <p id="sintesi-parziale" class="avviso-parziale" hidden></p>
+          <ul id="sintesi-conteggi" class="conteggi"></ul>
+          <p id="sintesi-meta" class="nota"></p>
+        </div>
+        <div class="sintesi-azioni">
+          <button id="condividi" type="button" class="secondario" hidden>Copia il link</button>
+          <button id="nuova" type="button" class="secondario">Nuova analisi</button>
+        </div>
+      </div>
+
+      <div class="schede" role="tablist" aria-label="Sezioni del risultato">
+        <button role="tab" id="tab-riepilogo" aria-controls="pannello-riepilogo" aria-selected="true">Riepilogo</button>
+        <button role="tab" id="tab-completo" aria-controls="pannello-completo" aria-selected="false" data-documento>Report completo</button>
+        <button role="tab" id="tab-tecnico" aria-controls="pannello-tecnico" aria-selected="false" data-documento>Report tecnico</button>
+        <button role="tab" id="tab-sindaco" aria-controls="pannello-sindaco" aria-selected="false" data-documento>Per il sindaco</button>
+        <button role="tab" id="tab-pec" aria-controls="pannello-pec" aria-selected="false" data-documento>Bozza PEC</button>
+      </div>
+
+      <div id="pannello-riepilogo" role="tabpanel" aria-labelledby="tab-riepilogo" class="pannello">
+        <h3>Interventi consigliati</h3>
+        <div id="interventi"></div>
+        <h3>Tutti gli esiti</h3>
+        <div id="esiti"></div>
+      </div>
+
+      <div id="pannello-completo" role="tabpanel" aria-labelledby="tab-completo" class="pannello" hidden>
+        <div class="barra-documento">
+          <p class="nota">Il report HTML e' stampabile e si puo' salvare in PDF dal browser.</p>
+          <button type="button" class="secondario" data-scarica="html">Scarica HTML</button>
+        </div>
+        <iframe id="cornice-report" title="Report completo" sandbox="allow-same-origin"></iframe>
+      </div>
+
+      <div id="pannello-tecnico" role="tabpanel" aria-labelledby="tab-tecnico" class="pannello" hidden>
+        <div class="barra-documento">
+          <p class="nota">Da inoltrare al sistemista o al fornitore: contiene i comandi di correzione.</p>
+          <button type="button" class="secondario" data-copia="tecnico">Copia</button>
+          <button type="button" class="secondario" data-scarica="tecnico">Scarica .md</button>
+        </div>
+        <pre id="testo-tecnico" class="documento"></pre>
+      </div>
+
+      <div id="pannello-sindaco" role="tabpanel" aria-labelledby="tab-sindaco" class="pannello" hidden>
+        <div class="barra-documento">
+          <p class="nota">Linguaggio semplice, senza dettagli tecnici: per sindaco, giunta e RTD.</p>
+          <button type="button" class="secondario" data-copia="sindaco">Copia</button>
+          <button type="button" class="secondario" data-scarica="sindaco">Scarica .md</button>
+        </div>
+        <pre id="testo-sindaco" class="documento"></pre>
+      </div>
+
+      <div id="pannello-pec" role="tabpanel" aria-labelledby="tab-pec" class="pannello" hidden>
+        <form id="modulo-pec" class="modulo-pec">
+          <p class="nota">Compila i dati per personalizzare la bozza. Non vengono salvati: servono solo a generare il testo. Rileggi sempre la bozza prima di inviarla.</p>
+          <div class="griglia-pec">
+            <label>Ente destinatario<input name="ente" maxlength="200" placeholder="Comune di …"></label>
+            <label>PEC dell'ente<input name="pec_ente" maxlength="200" placeholder="protocollo@pec.…"></label>
+            <label>Responsabile per la Transizione Digitale<input name="rtd" maxlength="200"></label>
+            <label>Mittente (nome e cognome)<input name="mittente" maxlength="200"></label>
+            <label class="largo">Recapito del mittente<input name="contatto_mittente" maxlength="300" placeholder="email o telefono"></label>
+          </div>
+          <div class="barra-documento">
+            <button type="submit">Aggiorna la bozza</button>
+            <button type="button" class="secondario" data-copia="pec">Copia</button>
+            <button type="button" class="secondario" data-scarica="pec">Scarica .txt</button>
+          </div>
+        </form>
+        <pre id="testo-pec" class="documento"></pre>
+      </div>
+
+      <div class="scarica-tutto">
+        <span class="nota">Scarica:</span>
+        <button type="button" class="collegamento" data-scarica="json">JSON</button>
+        <button type="button" class="collegamento" data-scarica="html" data-documento>HTML</button>
+        <button type="button" class="collegamento" data-scarica="tecnico" data-documento>Report tecnico</button>
+        <button type="button" class="collegamento" data-scarica="sindaco" data-documento>Report sindaco</button>
+        <button type="button" class="collegamento" data-scarica="pec" data-documento>Bozza PEC</button>
+      </div>
+    </section>
+
+    <section id="come-funziona" class="informazioni">
+      <h2>Come funziona</h2>
+      <div class="tre-colonne">
+        <div>
+          <h3>Cosa controlla</h3>
+          <p>Connessione HTTPS e certificato, header di sicurezza, protezione della posta (SPF, DMARC, DKIM), DNSSEC, presenza di <code>security.txt</code>, CMS e versione esposta, cookie e risorse di terze parti.</p>
+        </div>
+        <div>
+          <h3>Cosa non fa</h3>
+          <p>Nessuna scansione di porte, enumerazione di file, tentativo di login o test attivo di vulnerabilita'. Si presenta con uno User-Agent trasparente: <code>SentinellaPA</code>.</p>
+        </div>
+        <div>
+          <h3>Divulgazione responsabile</h3>
+          <p>I risultati vanno comunicati all'ente in modo riservato e collaborativo, seguendo la procedura del CSIRT Italia. L'art. 615-ter c.p. resta applicabile ai test attivi non autorizzati: per questo lo strumento e' volutamente passivo.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="piede">
+  <div class="contenitore">
+    <p id="firma">Sentinella PA — <a href="https://github.com/enricolacchin/sentinella-pa" rel="noopener">github.com/enricolacchin/sentinella-pa</a></p>
+    <p class="nota">Software libero sotto licenza EUPL-1.2. I risultati sono indicativi e vanno verificati prima di qualsiasi comunicazione.</p>
+  </div>
+</footer>
+</body>
+</html>

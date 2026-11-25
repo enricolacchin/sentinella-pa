@@ -14,3 +14,11 @@ htmlcov/
 
 # Output delle analisi: possono contenere dati su enti reali, non vanno versionati
 /output/
+
+# Database locale dell'interfaccia web
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+
+# Configurazione locale di Claude Code
+.claude/

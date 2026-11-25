@@ -222,7 +222,10 @@ def _frame(home: HttpResponse) -> Finding:
             dettaglio="La CSP limita chi puo' incorporare il sito in un frame.",
             evidenza=direttiva.group(0) if direttiva else "frame-ancestors",
         )
-    if xfo and xfo.strip().upper() in ("DENY", "SAMEORIGIN"):
+    # Un header duplicato arriva unito da virgole ("SAMEORIGIN, SAMEORIGIN"): i
+    # browser lo applicano se tutti i valori sono DENY o SAMEORIGIN.
+    valori_xfo = {v.strip().upper() for v in (xfo or "").split(",") if v.strip()}
+    if valori_xfo and valori_xfo <= {"DENY", "SAMEORIGIN"}:
         return Finding(
             **base,
             status=Status.OK,

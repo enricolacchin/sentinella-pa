@@ -27,7 +27,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8"]
+web = ["fastapi>=0.110", "a2wsgi>=1.10"]
+dev = ["pytest>=8", "httpx>=0.27", "uvicorn>=0.29"]
 
 [project.urls]
 Homepage = "https://github.com/enricolacchin/sentinella-pa"
@@ -46,3 +47,4 @@ include = ["sentinella*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+filterwarnings = ["ignore:Using `httpx` with `starlette.testclient`"]

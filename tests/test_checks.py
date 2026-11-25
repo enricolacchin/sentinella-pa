@@ -170,6 +170,13 @@ def test_frame_ancestors_sostituisce_x_frame_options():
     assert per_id(security_headers.controlla(ctx), "header.frame").status == Status.OK
 
 
+@pytest.mark.parametrize("valore, status", [("SAMEORIGIN, SAMEORIGIN", Status.OK), ("deny", Status.OK), ("ALLOW-FROM https://x.example", Status.PROBLEMA)])
+def test_x_frame_options_varianti(valore, status):
+    h = {k: v for k, v in HEADER_BUONI.items() if k != "content-security-policy"}
+    h["x-frame-options"] = valore
+    assert per_id(security_headers.controlla(crea_contesto(home=risposta(headers=h))), "header.frame").status == status
+
+
 def test_versioni_esposte():
     h = {**HEADER_BUONI, "server": "Apache/2.4.29 (Ubuntu)", "x-powered-by": "PHP/7.2.24"}
     f = per_id(security_headers.controlla(crea_contesto(home=risposta(headers=h))), "header.versioni_esposte")

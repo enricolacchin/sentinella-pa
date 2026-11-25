@@ -256,7 +256,13 @@ def normalizza_url(url: str) -> str:
     host = (parti.hostname or "").rstrip(".").lower()
     if not host or " " in host:
         raise ValueError(f"Hostname non valido in: {url}")
-    netloc = host if parti.port in (None, 80, 443) else f"{host}:{parti.port}"
+    try:
+        porta = parti.port
+    except ValueError as exc:
+        raise ValueError(f"Porta non valida in: {url}") from exc
+    if ":" in host:  # indirizzo IPv6: nell'URL va tra parentesi quadre
+        host = f"[{host}]"
+    netloc = host if porta in (None, 80, 443) else f"{host}:{porta}"
     percorso = parti.path or "/"
     return urlunsplit(("https", netloc, percorso, parti.query, ""))
 

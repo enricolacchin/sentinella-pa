@@ -1,0 +1,51 @@
+# Pubblica il frontend (cartella web/) su GitHub Pages.
+#
+# Prima volta: Settings -> Pages -> Source: "GitHub Actions".
+# Indirizzo dell'API: Settings -> Secrets and variables -> Actions -> Variables
+#   SENTINELLA_API_URL = https://api.tuodominio.it   (senza barra finale)
+name: Pubblica su GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths: ["web/**", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  pubblica:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.pubblicazione.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Scrive config.js con l'indirizzo dell'API
+        env:
+          API_URL: ${{ vars.SENTINELLA_API_URL }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          api = os.environ.get("API_URL", "").strip().rstrip("/")
+          with open("web/config.js", "w", encoding="utf-8") as f:
+              f.write("window.SENTINELLA_CONFIG = " + json.dumps({"api": api}) + ";\n")
+          print("API:", api or "(non configurata)")
+          PY
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+
+      - id: pubblicazione
+        uses: actions/deploy-pages@v4

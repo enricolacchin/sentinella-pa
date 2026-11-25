@@ -20,13 +20,14 @@ from sentinella.core.context import dominio_registrabile, normalizza_url
         ("https://www.comune.milano.it:443/", "https://www.comune.milano.it/"),
         ("https://www.comune.milano.it:8443/", "https://www.comune.milano.it:8443/"),
         ("  agid.gov.it.  ", "https://agid.gov.it/"),
+        ("https://[2001:db8::1]:8443/", "https://[2001:db8::1]:8443/"),
     ],
 )
 def test_normalizza_url(ingresso, atteso):
     assert normalizza_url(ingresso) == atteso
 
 
-@pytest.mark.parametrize("ingresso", ["", "   ", "ftp://comune.milano.it", "https://"])
+@pytest.mark.parametrize("ingresso", ["", "   ", "ftp://comune.milano.it", "https://", "https://comune.milano.it:abc/"])
 def test_normalizza_url_rifiuta_input_non_validi(ingresso):
     with pytest.raises(ValueError):
         normalizza_url(ingresso)

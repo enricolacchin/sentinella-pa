@@ -1,0 +1,4 @@
+# Dipendenze per l'API web (hosting cPanel: pip install -r requirements-web.txt)
+-r requirements.txt
+fastapi>=0.110
+a2wsgi>=1.10

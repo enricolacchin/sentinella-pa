@@ -85,6 +85,33 @@ html = render_html(report)
 pec = render_pec(report, DatiPec(ente="Comune di Esempio", pec_ente="protocollo@pec.example.it"))
 ```
 
+## Interfaccia web
+
+Oltre alla riga di comando c'e' un'interfaccia web: si incolla l'indirizzo del sito,
+si attende qualche secondo e si ottengono riepilogo, report completo, report tecnico,
+report per il sindaco e bozza PEC personalizzabile, tutti scaricabili.
+
+- **Frontend** statico in `web/`, pubblicabile su GitHub Pages.
+- **API** in `sentinella/web/` (FastAPI), da ospitare su un hosting con Python,
+  ad esempio cPanel con "Setup Python App" (`passenger_wsgi.py`).
+
+Per provarla in locale:
+
+```bash
+pip install -e ".[web,dev]"
+```
+
+```bash
+python -m sentinella.web
+```
+
+e apri <http://127.0.0.1:8000>. La guida passo per passo per cPanel e GitHub Pages
+e' in [`docs/pubblicazione.md`](docs/pubblicazione.md).
+
+L'API e' pensata per essere esposta al pubblico: accetta solo domini pubblici
+(per default `.it`), blocca indirizzi interni anche dopo i redirect, limita le
+analisi per ora e non ricontatta lo stesso sito entro pochi minuti.
+
 ## Architettura
 
 ```text
@@ -94,17 +121,20 @@ sentinella/
 │   ├── models.py    Finding, Report, Status, Severity, punteggio. Tutto serializzabile
 │   └── checks/      un modulo per area; ognuno riceve il Context e restituisce list[Finding]
 ├── report/    rendering condiviso: testo, JSON, HTML, report tecnico, report semplice, PEC
+├── web/       API FastAPI: job in background, storico su SQLite, protezioni anti-abuso
 └── cli.py     wrapper sottile: argomenti -> analizza() -> report/
+web/           frontend statico (GitHub Pages) che chiama l'API
+passenger_wsgi.py   punto di ingresso per cPanel
 ```
 
 Per aggiungere un controllo basta scrivere una funzione `controlla(ctx) -> list[Finding]`
 in `core/checks/` e registrarla in `core/checks/__init__.py`. Un controllo che va in
 errore non blocca gli altri: produce un esito "non verificabile".
 
-Il motore e' pensato per la Fase 2 (interfaccia web + database): `analizza()` e' una
-chiamata unica, eseguibile in un job in background; `Report.to_dict()` /
-`Report.from_dict()` bastano per salvare e ricaricare un'analisi; il sito web usera'
-lo stesso `report.render_html` senza duplicare logica.
+CLI e interfaccia web sono due consumatori dello stesso motore: l'API chiama
+`analizza()` in un job in background, salva `Report.to_dict()` su SQLite (base per lo
+storico e il follow-up a 30/60/90 giorni) e restituisce i documenti prodotti da
+`sentinella.report`, senza duplicare logica.
 
 ## Cosa fa e cosa NON fa
 
