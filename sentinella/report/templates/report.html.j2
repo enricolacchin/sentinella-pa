@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sicurezza di {{ report.hostname }} — Sentinella PA</title>
+<style>
+  :root {
+    --testo: #1b1f24; --tenue: #59636e; --bordo: #d6dbe1; --fondo: #f6f7f9;
+    --ok: #1a7f37; --attenzione: #9a6700; --problema: #c62828; --errore: #6f42c1; --info: #0b62a4;
+  }
+  * { box-sizing: border-box; }
+  body { font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--testo);
+         margin: 0; background: #fff; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 24px 48px; }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; }
+  h2 { font-size: 1.15rem; margin: 36px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--bordo); }
+  h3 { font-size: 1rem; margin: 22px 0 8px; }
+  .sotto { color: var(--tenue); margin: 0; }
+  .sintesi { display: flex; gap: 24px; align-items: center; margin: 24px 0; padding: 20px;
+             border: 1px solid var(--bordo); border-radius: 10px; background: var(--fondo); }
+  .voto { font-size: 2.6rem; font-weight: 700; width: 84px; height: 84px; border-radius: 50%;
+          display: grid; place-items: center; color: #fff; flex: none; }
+  .voto-A, .voto-B { background: var(--ok); } .voto-C { background: var(--attenzione); }
+  .voto-D, .voto-E { background: var(--problema); }
+  .numeri { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 6px; }
+  dl.meta { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 0; }
+  dl.meta dt { color: var(--tenue); } dl.meta dd { margin: 0; word-break: break-all; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--bordo); vertical-align: top; }
+  th { color: var(--tenue); font-weight: 600; }
+  .badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 0.8rem; font-weight: 600;
+           white-space: nowrap; border: 1px solid currentColor; }
+  .s-ok { color: var(--ok); } .s-attenzione { color: var(--attenzione); } .s-problema { color: var(--problema); }
+  .s-errore { color: var(--errore); } .s-info { color: var(--info); }
+  .scheda { border: 1px solid var(--bordo); border-left: 4px solid var(--bordo); border-radius: 8px;
+            padding: 14px 18px; margin: 14px 0; break-inside: avoid; }
+  .scheda.problema { border-left-color: var(--problema); } .scheda.attenzione { border-left-color: var(--attenzione); }
+  .scheda h3 { margin: 0 0 6px; }
+  .scheda p { margin: 6px 0; }
+  .etichetta { font-size: 0.78rem; text-transform: uppercase; letter-spacing: .04em; color: var(--tenue); margin-top: 10px; }
+  pre { background: var(--fondo); border: 1px solid var(--bordo); border-radius: 6px; padding: 10px 12px;
+        overflow-x: auto; font: 0.83rem/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        white-space: pre-wrap; word-break: break-word; margin: 4px 0; }
+  .nota { color: var(--tenue); font-size: 0.9rem; }
+  footer { margin-top: 40px; padding-top: 12px; border-top: 1px solid var(--bordo); color: var(--tenue); font-size: 0.85rem; }
+  @media print {
+    main { padding: 0; max-width: none; }
+    .sintesi, pre { background: none; }
+    .voto { color: var(--testo); border: 3px solid var(--testo); background: none !important; }
+    h2, h3 { break-after: avoid; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Sicurezza del sito {{ report.hostname }}</h1>
+    <p class="sotto">Verifica passiva del {{ report.timestamp | data }}</p>
+  </header>
+
+  {% set conteggi = report.conteggi() %}
+  <section class="sintesi" aria-label="Sintesi">
+    <div class="voto voto-{{ report.voto }}" aria-label="Voto {{ report.voto }}">{{ report.voto }}</div>
+    <div>
+      <strong>{{ report.punteggio }}/100 — {{ descrizione_voto[report.voto] }}</strong>
+      {% if not report.completo %}
+      <div class="s-errore">Voto parziale: {{ report.non_verificabili }} controlli non verificabili.</div>
+      {% endif %}
+      <div class="numeri">
+        <span class="s-problema">{{ conteggi.problema }} problemi</span>
+        <span class="s-attenzione">{{ conteggi.attenzione }} da migliorare</span>
+        <span class="s-ok">{{ conteggi.ok }} ok</span>
+        <span class="s-errore">{{ conteggi.errore }} non verificabili</span>
+        <span class="s-info">{{ conteggi.info }} informativi</span>
+      </div>
+    </div>
+  </section>
+
+  <dl class="meta">
+    <dt>Sito analizzato</dt><dd>{{ report.target }}</dd>
+    <dt>URL finale</dt><dd>{{ report.final_url }}</dd>
+    <dt>Dominio</dt><dd>{{ report.dominio }}</dd>
+    <dt>Durata</dt><dd>{{ report.durata_secondi }} s</dd>
+  </dl>
+
+  <p class="nota">Analisi esclusivamente passiva: sono state osservate solo le risposte che il sito e il DNS
+  forniscono a qualsiasi visitatore. Nessuna scansione, enumerazione o test attivo.</p>
+
+  {% set interventi = da_correggere(report) %}
+  <h2>Interventi consigliati</h2>
+  {% if not interventi %}
+  <p>Nessun intervento necessario sui controlli eseguiti.</p>
+  {% endif %}
+  {% for f in interventi %}
+  <article class="scheda {{ f.status.value }}">
+    <h3>{{ f.titolo }}</h3>
+    <span class="badge s-{{ f.status.value }}">{{ f.status.value | etichetta_status }}</span>
+    <span class="badge">gravita' {{ f.severita.value }}</span>
+    <p>{{ f.dettaglio }}</p>
+    {% if f.evidenza %}<div class="etichetta">Evidenza</div><pre>{{ f.evidenza }}</pre>{% endif %}
+    {% if f.rimedio %}<div class="etichetta">Come intervenire</div><pre>{{ f.rimedio }}</pre>{% endif %}
+    {% if f.rimedio_nginx %}<div class="etichetta">nginx</div><pre>{{ f.rimedio_nginx }}</pre>{% endif %}
+    {% if f.rimedio_apache %}<div class="etichetta">Apache</div><pre>{{ f.rimedio_apache }}</pre>{% endif %}
+    {% if f.rimedio_wordpress %}<div class="etichetta">WordPress / PHP</div><pre>{{ f.rimedio_wordpress }}</pre>{% endif %}
+    {% if f.riferimento %}<p class="nota">Riferimenti: {{ f.riferimento }}</p>{% endif %}
+  </article>
+  {% endfor %}
+
+  <h2>Tutti gli esiti</h2>
+  {% for etichetta, lista in gruppi(report) %}
+  <h3>{{ etichetta }}</h3>
+  <table>
+    <thead><tr><th>Esito</th><th>Gravita'</th><th>Controllo</th><th>Dettaglio</th></tr></thead>
+    <tbody>
+    {% for f in lista %}
+      <tr>
+        <td><span class="badge s-{{ f.status.value }}">{{ f.status.value | etichetta_status }}</span></td>
+        <td>{{ f.severita.value }}</td>
+        <td>{{ f.titolo }}</td>
+        <td>{{ f.dettaglio }}{% if f.evidenza and f.status.value in ("ok", "info", "errore") %}<pre>{{ f.evidenza }}</pre>{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endfor %}
+
+  <p class="nota">Punteggio: si parte da 100 e si sottrae per ogni problema critica 25, alta 15, media 8,
+  bassa 3 punti; gli esiti "da migliorare" pesano la meta'. Voto A da 90, B da 75, C da 60, D da 40, E sotto 40.</p>
+
+  <footer>{{ report.generato_con }}</footer>
+</main>
+</body>
+</html>

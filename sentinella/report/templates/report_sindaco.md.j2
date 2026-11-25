@@ -1,0 +1,67 @@
+{% set priorita = report.da_segnalare() %}
+{% set minori = da_correggere(report) | rejectattr("da_segnalare") | list %}
+# La sicurezza del sito {{ report.hostname }} in breve
+
+*Verifica del {{ report.timestamp | data }}*
+
+## Il risultato
+
+**Voto {{ report.voto }} ({{ report.punteggio }} su 100): {{ descrizione_voto[report.voto] | lower }}.**
+{% if not report.completo %}
+
+Il voto e' parziale: non e' stato possibile eseguire {{ report.non_verificabili }} controlli
+(ad esempio perche' il sito ha rifiutato la verifica automatica), quindi il quadro reale
+potrebbe essere diverso.
+{% endif %}
+
+La verifica ha osservato il sito solo dall'esterno, come lo vede un qualsiasi cittadino
+con il proprio browser: non e' stato fatto alcun tentativo di accesso o di attacco.
+Proprio per questo, quello che segue e' visibile a chiunque, anche a chi ha cattive
+intenzioni.
+
+{% if priorita %}
+## Cosa conviene sistemare per primo
+
+{% for f in priorita %}
+### {{ loop.index }}. {{ f | titolo_semplice }}
+
+**Cosa rischiano i cittadini:** {{ f | rischio }}
+
+{% endfor %}
+{% else %}
+## Nessun problema rilevante
+
+Non sono emersi problemi di gravita' media o superiore. Restano possibili piccoli
+miglioramenti, descritti nel report tecnico.
+
+{% endif %}
+{% if minori %}
+## Miglioramenti minori
+
+{% for f in minori %}
+- {{ f | titolo_semplice }}
+{% endfor %}
+
+{% endif %}
+## Perche' intervenire
+
+- Il sito istituzionale e la posta dell'ente sono il primo punto di contatto con i
+  cittadini: se possono essere imitati o alterati, la fiducia nei servizi digitali cala.
+- Le email false a nome di un ente pubblico sono uno degli strumenti piu' usati nelle
+  truffe ai danni dei cittadini.
+- Le correzioni indicate sono quasi sempre impostazioni di configurazione: di solito non
+  richiedono nuovi acquisti e possono essere fatte dal fornitore o dal sistemista.
+- La cura della sicurezza dei servizi digitali rientra nelle buone pratiche indicate da
+  AgID e dall'Agenzia per la Cybersicurezza Nazionale.
+
+## Prossimi passi suggeriti
+
+1. Inoltrare il report tecnico al Responsabile per la Transizione Digitale e al
+   fornitore che gestisce il sito e la posta.
+2. Chiedere una stima dei tempi per le correzioni indicate come prioritarie.
+3. Pubblicare un indirizzo per le segnalazioni di sicurezza (file `security.txt`), cosi'
+   da ricevere in futuro avvisi come questo tramite un canale ufficiale.
+
+---
+
+{{ report.generato_con }}

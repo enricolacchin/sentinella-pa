@@ -1,0 +1,4 @@
+# Canale ufficiale per le segnalazioni di sicurezza
+Contact: mailto:sicurezza@comune.esempio.example
+Expires: 2099-12-31T23:00:00.000Z
+Preferred-Languages: it, en

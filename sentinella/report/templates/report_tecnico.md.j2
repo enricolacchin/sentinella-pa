@@ -1,0 +1,105 @@
+{% set conteggi = report.conteggi() %}
+{% set interventi = da_correggere(report) %}
+# Report tecnico di sicurezza — {{ report.hostname }}
+
+| | |
+|---|---|
+| **Sito analizzato** | {{ report.target }} |
+| **URL finale** | {{ report.final_url }} |
+| **Dominio registrabile** | {{ report.dominio }} |
+| **Data dell'analisi** | {{ report.timestamp | data }} |
+| **Punteggio** | **{{ report.punteggio }}/100 — voto {{ report.voto }}** ({{ descrizione_voto[report.voto] }}) |
+{% if not report.completo %}
+| **Attenzione** | Voto parziale: {{ report.non_verificabili }} controlli non verificabili (vedi in fondo) |
+{% endif %}
+| **Esiti** | {{ conteggi.problema }} problemi · {{ conteggi.attenzione }} attenzione · {{ conteggi.ok }} ok · {{ conteggi.errore }} non verificabili · {{ conteggi.info }} informativi |
+
+> Analisi esclusivamente **passiva**: sono state osservate solo le risposte che il sito
+> e il DNS forniscono a qualsiasi visitatore (pagina principale in HTTP e HTTPS,
+> handshake TLS, record DNS pubblici, `/.well-known/security.txt`). Nessuna scansione
+> di porte, enumerazione di percorsi o test attivo di vulnerabilita'.
+
+## Interventi consigliati, in ordine di priorita'
+
+{% if not interventi %}
+Nessun intervento necessario sui controlli eseguiti.
+
+{% endif %}
+{% for f in interventi %}
+### {{ loop.index }}. {{ f.titolo }}
+
+- **Esito:** {{ f.status.value | etichetta_status }} · **Gravita':** {{ f.severita.value }} · **Codice:** `{{ f.id }}`
+- **Cosa e' stato osservato:** {{ f.dettaglio }}
+{% if f.evidenza %}
+
+Evidenza:
+
+```text
+{{ f.evidenza }}
+```
+{% endif %}
+{% if f.rimedio %}
+
+**Come intervenire:** {{ f.rimedio }}
+{% endif %}
+{% if f.rimedio_nginx %}
+
+nginx:
+
+```nginx
+{{ f.rimedio_nginx }}
+```
+{% endif %}
+{% if f.rimedio_apache %}
+
+Apache:
+
+```apache
+{{ f.rimedio_apache }}
+```
+{% endif %}
+{% if f.rimedio_wordpress %}
+
+WordPress / PHP:
+
+```php
+{{ f.rimedio_wordpress }}
+```
+{% endif %}
+{% if f.riferimento %}
+
+*Riferimenti:* {{ f.riferimento }}
+{% endif %}
+
+{% endfor %}
+## Tutti gli esiti per area
+
+{% for etichetta, lista in gruppi(report) %}
+### {{ etichetta }}
+
+| Esito | Gravita' | Controllo | Dettaglio |
+|---|---|---|---|
+{% for f in lista %}
+| {{ f.status.value | etichetta_status }} | {{ f.severita.value }} | {{ f.titolo }} | {{ f.dettaglio | replace("|", "\\|") | replace("\n", " ") }} |
+{% endfor %}
+
+{% endfor %}
+{% set non_verificabili = report.findings | selectattr("status", "equalto", Status.ERRORE) | list %}
+{% if non_verificabili %}
+## Controlli non verificabili
+
+{% for f in non_verificabili %}
+- **{{ f.titolo }}**: {{ f.dettaglio }}{% if f.evidenza %} (`{{ f.evidenza | replace("\n", " ") }}`){% endif %}
+
+{% endfor %}
+
+{% endif %}
+## Metodo di calcolo del punteggio
+
+Si parte da 100 e si sottrae per ogni problema: critica 25, alta 15, media 8, bassa 3
+punti; gli esiti "attenzione" pesano la meta'. Voto: A da 90, B da 75, C da 60, D da 40,
+E sotto 40. Gli esiti non verificabili non incidono sul punteggio.
+
+---
+
+{{ report.generato_con }}

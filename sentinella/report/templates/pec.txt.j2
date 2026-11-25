@@ -1,0 +1,35 @@
+A: {{ ente }}
+PEC: {{ pec_ente }}
+Alla c.a. del Responsabile per la Transizione Digitale, {{ rtd }}
+
+Oggetto: Segnalazione di possibili miglioramenti alla sicurezza del sito {{ report.hostname }} — divulgazione responsabile
+
+Gentile Responsabile,
+
+scrivo per segnalare, in spirito di collaborazione, alcuni aspetti della configurazione del sito istituzionale {{ report.target }} che a mio avviso meritano attenzione, con l'unico scopo di contribuire alla sicurezza dei servizi offerti ai cittadini.
+
+Le osservazioni derivano da una verifica esclusivamente passiva svolta il {{ report.timestamp | data }}: sono state consultate soltanto le informazioni che il sito e il sistema dei nomi a dominio (DNS) forniscono a qualunque visitatore, esattamente come accade aprendo la pagina con un normale browser. Non e' stato effettuato alcun tentativo di accesso, scansione o test attivo sui sistemi dell'Ente.
+
+{% if problemi %}
+Aspetti rilevati:
+
+{% for f in problemi %}
+{{ loop.index }}. {{ f | titolo_semplice }} (gravita' {{ f.severita.value }}).
+   {{ f | rischio }}
+
+{% endfor %}
+{% else %}
+La verifica non ha evidenziato problemi di gravita' media o superiore; segnalo comunque, nel report tecnico, alcuni possibili miglioramenti minori.
+
+{% endif %}
+Allego un report tecnico con il dettaglio di ciascun punto e le indicazioni di correzione, utile al personale tecnico o al fornitore che gestisce il sito e la posta elettronica. Si tratta in gran parte di impostazioni di configurazione, coerenti con le buone pratiche indicate da AgID (Misure minime di sicurezza ICT per le pubbliche amministrazioni; Raccomandazioni AgID sul protocollo TLS) e dall'Agenzia per la Cybersicurezza Nazionale.
+
+Chiedo cortesemente di valutare la correzione dei punti segnalati. Nel rispetto dei principi di divulgazione responsabile, non rendero' pubblici i dettagli di questa segnalazione e resto disponibile per eventuali chiarimenti; qualora l'Ente lo ritenga opportuno, la segnalazione puo' essere condivisa anche con il CSIRT Italia. Suggerisco inoltre di pubblicare un file security.txt (RFC 9116) con un recapito dedicato, cosi' da facilitare segnalazioni future.
+
+Ringrazio per l'attenzione e porgo cordiali saluti.
+
+{{ mittente }}
+{{ contatto_mittente }}
+
+--
+{{ report.generato_con }}

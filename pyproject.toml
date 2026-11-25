@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sentinella-pa"
+dynamic = ["version"]
+description = "Verifica passiva della sicurezza dei siti della Pubblica Amministrazione italiana, con report e bozza PEC per la divulgazione responsabile."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "EUPL-1.2"
+license-files = ["LICENSE"]
+authors = [{ name = "Enrico Lacchin" }]
+keywords = ["sicurezza", "pubblica amministrazione", "tls", "dmarc", "security.txt", "divulgazione responsabile"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Natural Language :: Italian",
+    "Topic :: Security",
+    "Environment :: Console",
+]
+dependencies = [
+    "requests>=2.31",
+    "dnspython>=2.4",
+    "tldextract>=5.1",
+    "jinja2>=3.1",
+    "rich>=13.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.urls]
+Homepage = "https://github.com/enricolacchin/sentinella-pa"
+
+[project.scripts]
+sentinella = "sentinella.cli:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "sentinella.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["sentinella*"]
+
+[tool.setuptools.package-data]
+"sentinella.report" = ["templates/*.j2"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
